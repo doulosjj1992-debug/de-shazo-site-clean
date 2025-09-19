@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/%1", "destination": "/", "permanent": true },
+    { "source": "/%1/(.*)", "destination": "/$1", "permanent": true }
+  ]
+}
