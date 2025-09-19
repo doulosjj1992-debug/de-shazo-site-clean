@@ -1,0 +1,9 @@
+/* shim: route all global styles through app/globals.css */
+@import "../styles/globals.css";
+
+/* If you’re using Tailwind and the file above doesn’t exist,
+   you can instead put the directives directly here:
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+*/
