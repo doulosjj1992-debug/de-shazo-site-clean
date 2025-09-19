@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --ink:#0f172a; --bg:#ffffff; }
+body { color: var(--ink); background: var(--bg); }
+main { min-height: 60vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
