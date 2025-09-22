@@ -1,3 +1,3 @@
 export async function GET() {
-  return Response.redirect('/mirror/index.html', 308);
+  return new Response(null, { status: 204 });
 }

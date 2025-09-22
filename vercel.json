@@ -1,11 +1,12 @@
 {
+  "rewrites": [
+    { "source": "/",           "destination": "/mirror/index.html" },
+    { "source": "/index.html", "destination": "/mirror/index.html" },
+
+    { "source": "/:slug",      "destination": "/mirror/:slug.html" },
+    { "source": "/:path*",     "destination": "/mirror/:path*" }
+  ],
   "redirects": [
-    { "source": "/",           "destination": "/mirror/index.html",   "permanent": false },
-    { "source": "/index.html", "destination": "/mirror/index.html",   "permanent": false },
-    { "source": "/services",   "destination": "/mirror/services.html","permanent": false },
-    { "source": "/projects",   "destination": "/mirror/projects.html","permanent": false },
-    { "source": "/team",       "destination": "/mirror/team.html",    "permanent": false },
-    { "source": "/contact",    "destination": "/mirror/contact.html", "permanent": false },
-    { "source": "/news",       "destination": "/mirror/news.html",    "permanent": false }
+    { "source": "/projects/mixed-use-facilties", "destination": "/projects/mixed-use-facilities", "permanent": true }
   ]
 }
