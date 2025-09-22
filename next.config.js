@@ -1,19 +1,32 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '**.supabase.co' },
-      { protocol: 'https', hostname: 'images.unsplash.com' }
-    ],
-    formats: ['image/avif', 'image/webp']
-  },
-  experimental: { appDir: true },
-  async redirects() { return []; },
+  experimental: { typedRoutes: true },
+
   async headers() {
-    return [{
-      source: '/:path*',
-      headers: [{ key: 'X-DNS-Prefetch-Control', value: 'on' }]
-    }];
-  }
+    return [
+      {
+        source: '/:path*',
+        headers: [{ key: 'x-dns-prefetch-control', value: 'on' }],
+      },
+    ];
+  },
+
+  async redirects() {
+    return [
+      // fix the typo’d route
+      {
+        source: '/projects/mixed-use-facilties',
+        destination: '/projects/mixed-use-facilities',
+        permanent: true,
+      },
+      // drop legacy .html suffixes → clean URLs
+      {
+        source: '/:path*.html',
+        destination: '/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
+
 export default nextConfig;
