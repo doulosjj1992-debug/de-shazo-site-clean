@@ -3,3 +3,7 @@ node_modules
 .next
 .env*
 .vercel
+.vercel
+.vercel/output
+.vercel
+.vercel/output
