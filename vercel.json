@@ -2,14 +2,11 @@
   "rewrites": [
     { "source": "/",           "destination": "https://www.deshazogroup.com/index.html" },
     { "source": "/index.html", "destination": "https://www.deshazogroup.com/index.html" },
-
     { "source": "/services",   "destination": "https://www.deshazogroup.com/services.html" },
     { "source": "/projects",   "destination": "https://www.deshazogroup.com/projects.html" },
     { "source": "/team",       "destination": "https://www.deshazogroup.com/team.html" },
     { "source": "/contact",    "destination": "https://www.deshazogroup.com/contact.html" },
     { "source": "/news",       "destination": "https://www.deshazogroup.com/news.html" },
-
-    // Catch-all: proxy any other path AS-IS (including .html and nested paths)
     { "source": "/:path*",     "destination": "https://www.deshazogroup.com/:path*" }
   ],
   "redirects": [
