@@ -1,6 +1,6 @@
 {
   "redirects": [
-    { "source": "/%1", "destination": "/", "permanent": true },
-    { "source": "/%1/(.*)", "destination": "/$1", "permanent": true }
+    { "source": "/:path*.html", "destination": "/:path*", "permanent": true },
+    { "source": "/projects/mixed-use-facilties", "destination": "/projects/mixed-use-facilities", "permanent": true }
   ]
 }
