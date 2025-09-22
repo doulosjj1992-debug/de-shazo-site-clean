@@ -1,5 +1,6 @@
-/* Mirror the live site by crawling internal links and saving HTML + assets.
- * Requires Node 18+ (global fetch).
+/* Mirror the live site by crawling internal links, reading /sitemap.xml,
+ * and saving HTML + assets into public/mirror.
+ * Node 18+ required (global fetch).
  */
 const fs   = require('fs');
 const path = require('path');
@@ -9,7 +10,18 @@ const ORIGIN   = 'https://www.deshazogroup.com';
 const OUT_DIR  = path.join(process.cwd(), 'public', 'mirror');
 const ORIG_DIR = path.join(OUT_DIR, '_origin');
 
-const MAX_PAGES = 200;       // safety cap
+// Add any known pages here (copy exact URLs from the browser bar if needed)
+const MANUAL_SEEDS = [
+  `${ORIGIN}/`,
+  `${ORIGIN}/contact`,
+  // Add more exact URLs if you know them, e.g.:
+  // `${ORIGIN}/services`,
+  // `${ORIGIN}/team`,
+  // `${ORIGIN}/projects`,
+  // `${ORIGIN}/news`,
+];
+
+const MAX_PAGES = 400; // ceiling so we don't go infinite
 const ASSET_EXT = /\.(css|js|mjs|png|jpe?g|webp|svg|gif|ico|pdf|woff2?|ttf|eot|map)(\?.*)?$/i;
 const EXTERNAL_ALLOW = [
   'fonts.googleapis.com',
@@ -27,11 +39,8 @@ function sameOrigin(u) { try { return new URL(u).origin === ORIGIN; } catch { re
 function externalAllowed(u){ try { return EXTERNAL_ALLOW.includes(new URL(u).hostname); } catch { return false; } }
 
 function normalizePath(pathname) {
-  // Treat "/" as "index"
   if (pathname === '/' || pathname === '') return 'index';
-  // strip trailing slash except root
   if (pathname.endsWith('/')) pathname = pathname.slice(0,-1);
-  // last segment becomes slug
   const slug = pathname.split('/').pop();
   return slug || 'index';
 }
@@ -60,7 +69,7 @@ function extractLinks(html) {
 }
 
 function rewriteHtml(html) {
-  // rewrite top-nav/common paths to local /mirror/*.html
+  // rewrite root & clean links to mirror/*.html
   html = html
     .replace(/href=["']\/["']/g, 'href="/mirror/index.html"')
     .replace(/href=["']\/index\.html["']/g, 'href="/mirror/index.html"')
@@ -74,13 +83,11 @@ function rewriteHtml(html) {
       if (sameOrigin(val)) {
         const u = new URL(val);
         if (ASSET_EXT.test(u.pathname)) return `${attr}="/mirror/_origin${u.pathname}"`;
-        // internal html link → /mirror/*.html
         return `${attr}="/mirror/${normalizePath(u.pathname)}.html"`;
       }
-      return externalAllowed(val) ? full : full; // leave externals as-is
+      return externalAllowed(val) ? full : full;
     }
 
-    // relative or root-relative → treat same-origin
     try {
       const abs = new URL(val, ORIGIN + '/');
       if (ASSET_EXT.test(abs.pathname)) return `${attr}="/mirror/_origin${abs.pathname}"`;
@@ -113,7 +120,7 @@ async function processPage(absUrl) {
 
   let html = await res.text();
 
-  // collect assets
+  // grab assets
   const refs = extractLinks(html);
   const assets = [];
   for (const ref of refs) {
@@ -128,13 +135,13 @@ async function processPage(absUrl) {
   }
   await Promise.all(assets.map(downloadAsset));
 
-  // rewrite and save
+  // rewrite + save page
   const outFile = pageOutFile(u.pathname);
   html = rewriteHtml(html);
   saveFile(outFile, Buffer.from(html, 'utf8'));
   console.log('  saved', outFile);
 
-  // collect internal HTML links to crawl
+  // collect internal doc links to crawl
   const next = [];
   for (const ref of refs) {
     if (!ref || /^(#|mailto:|tel:|javascript:)/i.test(ref)) continue;
@@ -144,24 +151,43 @@ async function processPage(absUrl) {
     }
     if (!sameOrigin(target)) continue;
     const t = new URL(target);
-    // only crawl same-origin document links (no assets)
     if (!ASSET_EXT.test(t.pathname)) next.push(t.toString());
   }
   return next;
+}
+
+async function trySitemap() {
+  const urls = new Set();
+  try {
+    const res = await fetchFollow(`${ORIGIN}/sitemap.xml`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const xml = await res.text();
+    const re = /<loc>([^<]+)<\/loc>/gi;
+    let m;
+    while ((m = re.exec(xml)) !== null) {
+      const u = m[1].trim();
+      if (sameOrigin(u)) urls.add(u);
+    }
+    console.log(`Sitemap URLs discovered: ${urls.size}`);
+  } catch (e) {
+    console.warn('No sitemap or failed to read sitemap.xml:', e.message);
+  }
+  return [...urls];
 }
 
 (async () => {
   fs.rmSync(OUT_DIR, { recursive: true, force: true });
   ensureDir(OUT_DIR); ensureDir(ORIG_DIR);
 
-  const start = [`${ORIGIN}/`, `${ORIGIN}/contact`]; // seeds
-  const queue = [...start];
+  const sitemapSeeds = await trySitemap();
+  const queue = [...new Set([...MANUAL_SEEDS, ...sitemapSeeds])];
   const visited = new Set();
   let count = 0;
 
   while (queue.length && count < MAX_PAGES) {
     const cur = queue.shift();
-    const key = new URL(cur).pathname;
+    let key;
+    try { key = new URL(cur).pathname; } catch { continue; }
     if (visited.has(key)) continue;
     visited.add(key);
 
