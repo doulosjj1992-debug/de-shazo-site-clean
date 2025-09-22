@@ -1,15 +1,15 @@
 {
   "rewrites": [
-    { "source": "/",             "destination": "https://www.deshazogroup.com/index.html" },
-    { "source": "/services",     "destination": "https://www.deshazogroup.com/services.html" },
-    { "source": "/projects",     "destination": "https://www.deshazogroup.com/projects.html" },
-    { "source": "/team",         "destination": "https://www.deshazogroup.com/team.html" },
-    { "source": "/contact",      "destination": "https://www.deshazogroup.com/contact.html" },
-    { "source": "/news",         "destination": "https://www.deshazogroup.com/news.html" },
-    { "source": "/:path*",       "destination": "https://www.deshazogroup.com/:path*" }
+    { "source": "/",       "destination": "https://www.deshazogroup.com/index.html" },
+    { "source": "/services","destination": "https://www.deshazogroup.com/services.html" },
+    { "source": "/projects","destination": "https://www.deshazogroup.com/projects.html" },
+    { "source": "/team",    "destination": "https://www.deshazogroup.com/team.html" },
+    { "source": "/contact", "destination": "https://www.deshazogroup.com/contact.html" },
+    { "source": "/news",    "destination": "https://www.deshazogroup.com/news.html" },
+    { "source": "/:path*",  "destination": "https://www.deshazogroup.com/:path*" }
   ],
   "redirects": [
-    { "source": "/:path*.html",  "destination": "/:path*", "permanent": true },
+    { "source": "/:path*.html", "destination": "/:path*", "permanent": true },
     { "source": "/projects/mixed-use-facilties", "destination": "/projects/mixed-use-facilities", "permanent": true }
   ]
 }
