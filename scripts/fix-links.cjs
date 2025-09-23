@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
-const ROOT = path.join(process.cwd(), 'public');
+const ROOT = path.join(process.cwd(), 'public', '');
 const ORIGIN = process.env.ORIGIN || 'https://deshazos-fresh-site.webflow.io';
 
 function walk(dir, out=[]) {
@@ -20,22 +20,23 @@ let fixed = 0;
 
 for (const file of files) {
   try {
-    let html = fs.readFileSync(file, 'utf8');
+    const html = fs.readFileSync(file, 'utf8');
     const dom = new JSDOM(html);
     const doc = dom.window.document;
-    const fixUrl = u => (u.startsWith(ORIGIN) ? u.replace(ORIGIN, '') : u);
 
-    doc.querySelectorAll('a[href]').forEach(el => { el.href = fixUrl(el.href); fixed++; });
-    doc.querySelectorAll('link[href]').forEach(el => { el.href = fixUrl(el.href); fixed++; });
-    doc.querySelectorAll('script[src]').forEach(el => { el.src = fixUrl(el.src); fixed++; });
-    doc.querySelectorAll('img[src], video[src], source[src]').forEach(el => { el.src = fixUrl(el.src); fixed++; });
-    doc.querySelectorAll('[srcset]').forEach(el => {
-      el.srcset = el.srcset.split(',').map(s => {
-        const [u, d] = s.trim().split(/\s+/);
-        const nu = fixUrl(u);
-        return d ? `${nu} ${d}` : nu;
-      }).join(', ');
-      fixed++;
+    // Only fix internal PAGE navigation links
+    doc.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href');
+      if (!href) return;
+      // normalize absolute → origin-relative so your pages link internally,
+      // but DO NOT touch assets (css/js/img/etc.)
+      try {
+        const url = new URL(href, ORIGIN);
+        if (url.origin === new URL(ORIGIN).origin) {
+          a.setAttribute('href', url.pathname + url.search + url.hash);
+          fixed++;
+        }
+      } catch {}
     });
 
     fs.writeFileSync(file, dom.serialize());
@@ -43,4 +44,5 @@ for (const file of files) {
     console.warn('Skip', file, e.message);
   }
 }
-console.log(`Fixed ${fixed} link refs`);
+
+console.log(`Fixed ${fixed} page links`);
