@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "echo 'Static site ready'"
+    "build": "echo 'Static files ready'"
   },
   "dependencies": {
-    "puppeteer": "^24.22.1",
-    "jsdom": "^27.0.0"
+    "puppeteer": "^24.2.0",
+    "jsdom": "^24.1.0"
   }
 }

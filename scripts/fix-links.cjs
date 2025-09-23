@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
-const ROOT = path.join(process.cwd(), 'public', 'mirror');
+const ROOT = path.join(process.cwd(), 'public');
 const ORIGIN = process.env.ORIGIN || 'https://deshazos-fresh-site.webflow.io';
 
 function walk(dir, out=[]) {
@@ -23,8 +23,7 @@ for (const file of files) {
     let html = fs.readFileSync(file, 'utf8');
     const dom = new JSDOM(html);
     const doc = dom.window.document;
-
-    const fixUrl = u => u.startsWith(ORIGIN) ? u.replace(ORIGIN, '') : u;
+    const fixUrl = u => (u.startsWith(ORIGIN) ? u.replace(ORIGIN, '') : u);
 
     doc.querySelectorAll('a[href]').forEach(el => { el.href = fixUrl(el.href); fixed++; });
     doc.querySelectorAll('link[href]').forEach(el => { el.href = fixUrl(el.href); fixed++; });
@@ -34,7 +33,7 @@ for (const file of files) {
       el.srcset = el.srcset.split(',').map(s => {
         const [u, d] = s.trim().split(/\s+/);
         const nu = fixUrl(u);
-        return d ? \`\${nu} \${d}\` : nu;
+        return d ? `${nu} ${d}` : nu;
       }).join(', ');
       fixed++;
     });
@@ -44,5 +43,4 @@ for (const file of files) {
     console.warn('Skip', file, e.message);
   }
 }
-
-console.log(\`Fixed \${fixed} link refs\`);
+console.log(`Fixed ${fixed} link refs`);
