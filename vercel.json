@@ -8,9 +8,56 @@
     { "source": "/uploads/(.*)", "destination": "https://www.deshazogroup.com/uploads/$1" },
     { "source": "/favicon.ico", "destination": "https://www.deshazogroup.com/favicon.ico" },
 
-    { "source": "^/$",        "destination": "/mirror/index.html" },
+    { "source": "/", "destination": "/mirror/index.html" },
 
-    { "source": "^/(.*)/$",   "destination": "/mirror/$1/index.html" },
-    { "source": "^/(.*)$",    "destination": "/mirror/$1.html" }
+    // Top-level pretty routes that actually live under /mirror/main/...
+    { "source": "/services",    "destination": "/mirror/main/our-service.html" },
+    { "source": "/our-service", "destination": "/mirror/main/our-service.html" },
+    { "source": "/our-services","destination": "/mirror/main/our-service.html" },
+
+    { "source": "/about",       "destination": "/mirror/main/about-us.html" },
+    { "source": "/about-us",    "destination": "/mirror/main/about-us.html" },
+
+    { "source": "/team",        "destination": "/mirror/main/profile.html" },
+    { "source": "/profile",     "destination": "/mirror/main/profile.html" },
+
+    { "source": "/contact",     "destination": "/mirror/contact.html" },
+    { "source": "/consultation","destination": "/mirror/consultation-page.html" },
+
+    { "source": "/news",        "destination": "/mirror/main/in-the-news.html" },
+    { "source": "/in-the-news", "destination": "/mirror/main/in-the-news.html" },
+
+    { "source": "/media",       "destination": "/mirror/main/media.html" },
+    { "source": "/career",      "destination": "/mirror/main/career-page.html" },
+    { "source": "/career-page", "destination": "/mirror/main/career-page.html" },
+
+    // Section indexes that must hit index.html, not .html
+    { "source": "/projects",    "destination": "/mirror/projects/index.html" },
+
+    // Folder → file.html patterns (mirror exactly what exists on disk)
+    { "source": "/projects/(.*)",                   "destination": "/mirror/projects/$1.html" },
+    { "source": "/our-services/(.*)",               "destination": "/mirror/our-services/$1.html" },
+    { "source": "/higher-education/(.*)",           "destination": "/mirror/higher-education/$1.html" },
+    { "source": "/k-12-facilities/(.*)",            "destination": "/mirror/k-12-facilities/$1.html" },
+    { "source": "/healthcare-folder/(.*)",          "destination": "/mirror/healthcare-folder/$1.html" },
+    { "source": "/community-plans-folder/(.*)",     "destination": "/mirror/community-plans-folder/$1.html" },
+    { "source": "/corporate-facilities-folder/(.*)","destination": "/mirror/corporate-facilities-folder/$1.html" },
+    { "source": "/cultural-facilities-folder/(.*)", "destination": "/mirror/cultural-facilities-folder/$1.html" },
+    { "source": "/mixed-use-facilties/(.*)",        "destination": "/mirror/mixed-use-facilties/$1.html" },
+    { "source": "/multifamily-developments/(.*)",   "destination": "/mirror/multifamily-developments/$1.html" },
+    { "source": "/religious-institutions/(.*)",     "destination": "/mirror/religious-institutions/$1.html" },
+    { "source": "/retail-development/(.*)",         "destination": "/mirror/retail-development/$1.html" },
+    { "source": "/parking-design/(.*)",             "destination": "/mirror/parking-design/$1.html" },
+    { "source": "/signal-design/(.*)",              "destination": "/mirror/signal-design/$1.html" },
+    { "source": "/transportation-projects/(.*)",    "destination": "/mirror/transportation-projects/$1.html" },
+    { "source": "/in-the-news-folder/(.*)",         "destination": "/mirror/in-the-news-folder/$1.html" },
+    { "source": "/master-plans/(.*)",               "destination": "/mirror/master-plans/$1.html" },
+    { "source": "/profile-folder/(.*)",             "destination": "/mirror/profile-folder/$1.html" },
+
+    // Directory-style URLs with trailing slash → .../index.html
+    { "source": "/(.*)/", "destination": "/mirror/$1/index.html" },
+
+    // Fallback: any other slug → .../.html
+    { "source": "/(.*)",  "destination": "/mirror/$1.html" }
   ]
 }
