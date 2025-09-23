@@ -11,3 +11,5 @@ node_modules
 .vercel/output
 .vercel
 .vercel/output
+.DS_Store
+node_modules/
