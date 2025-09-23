@@ -3,23 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "start": "next start"
+    "build": "echo 'Static files ready'"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.57.4",
-    "jsdom": "^24.1.0",
-    "next": "15.5.4",
     "puppeteer": "^24.2.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^24.5.2",
-    "@types/react": "^19.1.13",
-    "eslint": "^9.36.0",
-    "eslint-config-next": "^15.5.4",
-    "typescript": "^5.9.2"
+    "jsdom": "^24.1.0"
   }
 }
