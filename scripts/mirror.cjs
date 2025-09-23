@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const SITE_URL = 'https://www.deshazogroup.com';
+const SITE_URL = 'https://deshazos-fresh-site.webflow.io';
 const MIRROR_DIR = path.join(process.cwd(), 'public', 'mirror');
 
 // Pages to mirror (add more as needed)
