@@ -32,6 +32,10 @@
 
     { "source": "/projects",    "destination": "/mirror/projects/index.html" },
 
+    /* ---- CRITICAL: .html passthrough BEFORE appending rules ---- */
+    { "source": "/(.*)\\.html", "destination": "/mirror/$1.html" },
+
+    /* Folder → file.html */
     { "source": "/projects/(.*)",                   "destination": "/mirror/projects/$1.html" },
     { "source": "/our-services/(.*)",               "destination": "/mirror/our-services/$1.html" },
     { "source": "/higher-education/(.*)",           "destination": "/mirror/higher-education/$1.html" },
@@ -51,7 +55,10 @@
     { "source": "/master-plans/(.*)",               "destination": "/mirror/master-plans/$1.html" },
     { "source": "/profile-folder/(.*)",             "destination": "/mirror/profile-folder/$1.html" },
 
+    /* Directory-style URLs with trailing slash */
     { "source": "/(.*)/", "destination": "/mirror/$1/index.html" },
+
+    /* Fallback: append .html */
     { "source": "/(.*)",  "destination": "/mirror/$1.html" }
   ]
 }
