@@ -8,9 +8,9 @@
     { "source": "/uploads/(.*)", "destination": "https://www.deshazogroup.com/uploads/$1" },
     { "source": "/favicon.ico", "destination": "https://www.deshazogroup.com/favicon.ico" },
 
-    { "source": "^/$", "destination": "/mirror/index.html" },
+    { "source": "^/$",        "destination": "/mirror/index.html" },
 
-    { "source": "^/(.*)/$", "destination": "/mirror/$1/index.html" },
-    { "source": "^/(.*)$",  "destination": "/mirror/$1.html" }
+    { "source": "^/(.*)/$",   "destination": "/mirror/$1/index.html" },
+    { "source": "^/(.*)$",    "destination": "/mirror/$1.html" }
   ]
 }
