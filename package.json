@@ -4,5 +4,8 @@
   "private": true,
   "scripts": {
     "build": "echo 'Static site ready'"
+  },
+  "dependencies": {
+    "puppeteer": "^24.22.2"
   }
 }
