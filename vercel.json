@@ -1,17 +1,20 @@
 {
+  "buildCommand": "echo 'Static files ready'",
+  "outputDirectory": "public",
+  "framework": null,
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/_next/:path*",   "destination": "https://www.deshazogroup.com/_next/:path*" },
-    { "source": "/uploads/:path*", "destination": "https://www.deshazogroup.com/uploads/:path*" },
-    { "source": "/favicon.ico",    "destination": "https://www.deshazogroup.com/favicon.ico" },
-    { "source": "/robots.txt",     "destination": "https://www.deshazogroup.com/robots.txt" },
-    { "source": "/sitemap.xml",    "destination": "https://www.deshazogroup.com/sitemap.xml" },
-    { "source": "/",               "destination": "/mirror/index.html" },
-    { "source": "/index.html",     "destination": "/mirror/index.html" },
-    { "source": "/services",       "destination": "/mirror/our-service.html" },
-    { "source": "/team",           "destination": "/mirror/profile.html" },
-    { "source": "/contact",        "destination": "/mirror/contact.html" },
-    { "source": "/news",           "destination": "/mirror/in-the-news.html" },
-    { "source": "/projects",       "destination": "/mirror/index.html" },
-    { "source": "/:path*",         "destination": "/mirror/:path*.html" }
+    {"source": "/_next/:path*", "destination": "https://www.deshazogroup.com/_next/:path*"},
+    {"source": "/uploads/:path*", "destination": "https://www.deshazogroup.com/uploads/:path*"},
+    {"source": "/favicon.ico", "destination": "https://www.deshazogroup.com/favicon.ico"},
+    {"source": "/", "destination": "/mirror/index.html"},
+    {"source": "/services", "destination": "/mirror/main/our-service.html"},
+    {"source": "/projects", "destination": "/mirror/index.html"},
+    {"source": "/team", "destination": "/mirror/main/profile.html"},
+    {"source": "/contact", "destination": "/mirror/contact.html"},
+    {"source": "/news", "destination": "/mirror/main/in-the-news.html"},
+    {"source": "/about", "destination": "/mirror/main/about-us.html"},
+    {"source": "/:path", "destination": "/mirror/:path.html"},
+    {"source": "/:path/", "destination": "/mirror/:path/index.html"}
   ]
 }
