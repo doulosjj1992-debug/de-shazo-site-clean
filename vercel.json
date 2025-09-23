@@ -10,7 +10,6 @@
 
     { "source": "/", "destination": "/mirror/index.html" },
 
-    // Top-level pretty routes that actually live under /mirror/main/...
     { "source": "/services",    "destination": "/mirror/main/our-service.html" },
     { "source": "/our-service", "destination": "/mirror/main/our-service.html" },
     { "source": "/our-services","destination": "/mirror/main/our-service.html" },
@@ -31,10 +30,8 @@
     { "source": "/career",      "destination": "/mirror/main/career-page.html" },
     { "source": "/career-page", "destination": "/mirror/main/career-page.html" },
 
-    // Section indexes that must hit index.html, not .html
     { "source": "/projects",    "destination": "/mirror/projects/index.html" },
 
-    // Folder → file.html patterns (mirror exactly what exists on disk)
     { "source": "/projects/(.*)",                   "destination": "/mirror/projects/$1.html" },
     { "source": "/our-services/(.*)",               "destination": "/mirror/our-services/$1.html" },
     { "source": "/higher-education/(.*)",           "destination": "/mirror/higher-education/$1.html" },
@@ -54,10 +51,7 @@
     { "source": "/master-plans/(.*)",               "destination": "/mirror/master-plans/$1.html" },
     { "source": "/profile-folder/(.*)",             "destination": "/mirror/profile-folder/$1.html" },
 
-    // Directory-style URLs with trailing slash → .../index.html
     { "source": "/(.*)/", "destination": "/mirror/$1/index.html" },
-
-    // Fallback: any other slug → .../.html
     { "source": "/(.*)",  "destination": "/mirror/$1.html" }
   ]
 }
