@@ -1,12 +1,17 @@
 {
   "rewrites": [
-    { "source": "/",           "destination": "/mirror/index.html" },
-    { "source": "/index.html", "destination": "/mirror/index.html" },
-
-    { "source": "/:slug",      "destination": "/mirror/:slug.html" },
-    { "source": "/:path*",     "destination": "/mirror/:path*" }
-  ],
-  "redirects": [
-    { "source": "/projects/mixed-use-facilties", "destination": "/projects/mixed-use-facilities", "permanent": true }
+    { "source": "/_next/:path*",   "destination": "https://www.deshazogroup.com/_next/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://www.deshazogroup.com/uploads/:path*" },
+    { "source": "/favicon.ico",    "destination": "https://www.deshazogroup.com/favicon.ico" },
+    { "source": "/robots.txt",     "destination": "https://www.deshazogroup.com/robots.txt" },
+    { "source": "/sitemap.xml",    "destination": "https://www.deshazogroup.com/sitemap.xml" },
+    { "source": "/",               "destination": "/mirror/index.html" },
+    { "source": "/index.html",     "destination": "/mirror/index.html" },
+    { "source": "/services",       "destination": "/mirror/our-service.html" },
+    { "source": "/team",           "destination": "/mirror/profile.html" },
+    { "source": "/contact",        "destination": "/mirror/contact.html" },
+    { "source": "/news",           "destination": "/mirror/in-the-news.html" },
+    { "source": "/projects",       "destination": "/mirror/index.html" },
+    { "source": "/:path*",         "destination": "/mirror/:path*.html" }
   ]
 }
