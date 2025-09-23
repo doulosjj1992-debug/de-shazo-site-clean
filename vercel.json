@@ -4,52 +4,13 @@
   "framework": null,
   "trailingSlash": false,
   "rewrites": [
-    {"source": "/_next/:path*", "destination": "https://www.deshazogroup.com/_next/:path*"},
-    {"source": "/uploads/:path*", "destination": "https://www.deshazogroup.com/uploads/:path*"},
-    {"source": "/favicon.ico", "destination": "https://www.deshazogroup.com/favicon.ico"},
-    
-    {"source": "/", "destination": "/mirror/index.html"},
-    {"source": "/index", "destination": "/mirror/index.html"},
-    
-    {"source": "/services", "destination": "/mirror/main/our-service.html"},
-    {"source": "/our-service", "destination": "/mirror/main/our-service.html"},
-    {"source": "/our-services", "destination": "/mirror/main/our-service.html"},
-    
-    {"source": "/about", "destination": "/mirror/main/about-us.html"},
-    {"source": "/about-us", "destination": "/mirror/main/about-us.html"},
-    
-    {"source": "/team", "destination": "/mirror/main/profile.html"},
-    {"source": "/profile", "destination": "/mirror/main/profile.html"},
-    
-    {"source": "/contact", "destination": "/mirror/contact.html"},
-    {"source": "/consultation", "destination": "/mirror/consultation-page.html"},
-    
-    {"source": "/news", "destination": "/mirror/main/in-the-news.html"},
-    {"source": "/in-the-news", "destination": "/mirror/main/in-the-news.html"},
-    
-    {"source": "/media", "destination": "/mirror/main/media.html"},
-    {"source": "/career", "destination": "/mirror/main/career-page.html"},
-    
-    {"source": "/main/:path", "destination": "/mirror/main/:path.html"},
-    {"source": "/projects/:path", "destination": "/mirror/projects/:path.html"},
-    {"source": "/our-services/:path", "destination": "/mirror/our-services/:path.html"},
-    {"source": "/higher-education/:path", "destination": "/mirror/higher-education/:path.html"},
-    {"source": "/k-12-facilities/:path", "destination": "/mirror/k-12-facilities/:path.html"},
-    {"source": "/healthcare-folder/:path", "destination": "/mirror/healthcare-folder/:path.html"},
-    {"source": "/community-plans-folder/:path", "destination": "/mirror/community-plans-folder/:path.html"},
-    {"source": "/corporate-facilities-folder/:path", "destination": "/mirror/corporate-facilities-folder/:path.html"},
-    {"source": "/cultural-facilities-folder/:path", "destination": "/mirror/cultural-facilities-folder/:path.html"},
-    {"source": "/mixed-use-facilties/:path", "destination": "/mirror/mixed-use-facilties/:path.html"},
-    {"source": "/multifamily-developments/:path", "destination": "/mirror/multifamily-developments/:path.html"},
-    {"source": "/religious-institutions/:path", "destination": "/mirror/religious-institutions/:path.html"},
-    {"source": "/retail-development/:path", "destination": "/mirror/retail-development/:path.html"},
-    {"source": "/parking-design/:path", "destination": "/mirror/parking-design/:path.html"},
-    {"source": "/signal-design/:path", "destination": "/mirror/signal-design/:path.html"},
-    {"source": "/transportation-projects/:path", "destination": "/mirror/transportation-projects/:path.html"},
-    {"source": "/in-the-news-folder/:path", "destination": "/mirror/in-the-news-folder/:path.html"},
-    {"source": "/master-plans/:path", "destination": "/mirror/master-plans/:path.html"},
-    {"source": "/profile-folder/:path", "destination": "/mirror/profile-folder/:path.html"},
-    
-    {"source": "/:path", "destination": "/mirror/:path.html"}
+    { "source": "/_next/(.*)", "destination": "https://www.deshazogroup.com/_next/$1" },
+    { "source": "/uploads/(.*)", "destination": "https://www.deshazogroup.com/uploads/$1" },
+    { "source": "/favicon.ico", "destination": "https://www.deshazogroup.com/favicon.ico" },
+
+    { "source": "^/$", "destination": "/mirror/index.html" },
+
+    { "source": "^/(.*)/$", "destination": "/mirror/$1/index.html" },
+    { "source": "^/(.*)$",  "destination": "/mirror/$1.html" }
   ]
 }
