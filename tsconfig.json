@@ -20,14 +20,15 @@
     "incremental": true,
     "paths": {
       "@/*": [
-        "./src/*"
+        "src/*"
       ]
     },
     "plugins": [
       {
         "name": "next"
       }
-    ]
+    ],
+    "baseUrl": "."
   },
   "include": [
     "**/*.ts",
