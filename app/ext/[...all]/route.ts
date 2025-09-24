@@ -1,43 +1,45 @@
-export const runtime = 'edge';
+import type { NextRequest } from 'next/server';
 
-/**
- * Proxy: /ext/:host/:path*  ->  https://:host/:path*
- * Examples:
- *   /ext/cdn.prod.website-files.com/img/favicon.ico
- *   /ext/www.youtube.com/embed/VIDEOID
- */
-export async function GET(request: Request, { params }: { params: { all?: string[] } }) {
-  const parts = params.all ?? [];
-  if (parts.length === 0) {
-    return new Response('Bad Request: missing host/path', { status: 400 });
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
+const HOP_BY_HOP = [
+  'connection','keep-alive','proxy-authenticate','proxy-authorization',
+  'te','trailers','transfer-encoding','upgrade','accept-encoding'
+];
+
+function forwardableHeaders(src: Headers) {
+  const h = new Headers(src);
+  h.delete('host');
+  h.delete('accept-encoding');
+  h.delete('content-length');
+  return h;
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { all: string[] } }
+) {
+  const parts = params.all;
+  if (!parts || parts.length === 0) {
+    return new Response('Missing host/path', { status: 400 });
   }
 
   const host = parts[0];
-  const rest = parts.slice(1).join('/');
-  const target = `https://${host}${rest ? `/${rest}` : ''}`;
-
-  // Drop hop-by-hop headers
-  const hopByHop = new Set([
-    'connection','keep-alive','proxy-authenticate','proxy-authorization',
-    'te','trailers','transfer-encoding','upgrade'
-  ]);
-
-  const fwdHeaders = new Headers();
-  for (const [k, v] of (request.headers as any)) {
-    const key = k.toLowerCase();
-    if (!hopByHop.has(key) && key !== 'host') fwdHeaders.set(k, v);
-  }
+  const path = parts.slice(1).join('/');
+  const search = new URL(req.url).search; // keep query string
+  const url = `https://${host}/${path}${search}`;
 
   try {
-    const upstream = await fetch(target, {
+    const upstream = await fetch(url, {
       method: 'GET',
-      headers: fwdHeaders,
+      headers: forwardableHeaders(req.headers),
       redirect: 'follow',
+      cache: 'no-store',
     });
 
     const resHeaders = new Headers(upstream.headers);
-    for (const h of hopByHop) resHeaders.delete(h);
-    // allow your HTML to fetch cross-origin assets through this proxy
+    for (const h of HOP_BY_HOP) resHeaders.delete(h);
     resHeaders.set('access-control-allow-origin', '*');
 
     return new Response(upstream.body, {
@@ -48,4 +50,12 @@ export async function GET(request: Request, { params }: { params: { all?: string
   } catch (err) {
     return new Response(`Upstream fetch failed: ${(err as Error).message}`, { status: 502 });
   }
+}
+
+// Many CDNs send HEAD requests; mirror the GET logic for simplicity
+export async function HEAD(
+  req: NextRequest,
+  ctx: { params: { all: string[] } }
+) {
+  return GET(req, ctx);
 }
