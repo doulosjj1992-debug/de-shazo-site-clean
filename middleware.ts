@@ -1,33 +1,27 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export const config = {
   matcher: ['/ext/:path*'],
-}
+};
 
-export default function middleware(req: NextRequest) {
-  // Keep the raw encoded URL so spaces (%20) stay encoded
-  const raw = req.url
-  const cut = raw.split('/ext/')[1] // everything after "/ext/"
-  if (!cut) return NextResponse.next()
+export function middleware(req: NextRequest) {
+  const url = req.nextUrl.clone();
+  const after = url.pathname.slice('/ext/'.length); // keep raw encoding like %20
 
-  // Build the final external URL (no decoding)
-  const dest = `https://${cut}`
+  if (!after) {
+    return new NextResponse('Missing target', { status: 400 });
+  }
 
-  // Allowlist hosts (expand as needed)
-  const allowed = new Set([
-    'cdn.prod.website-files.com',
-    'www.youtube.com',
-    'ajax.googleapis.com',
-    'fonts.gstatic.com',
-    'fonts.googleapis.com',
-    'd3e54v103j8qbb.cloudfront.net',
-    'cdn.jsdelivr.net',
-    'challenges.cloudflare.com',
-  ])
-  const host = cut.split('/')[0]
-  if (!allowed.has(host)) return NextResponse.next()
+  // Build /api/ext?u=https://<raw-after><original-query>
+  const rewrite = req.nextUrl.clone();
+  rewrite.pathname = '/api/ext';
 
-  // 302 redirect so the browser fetches from the real host
-  return NextResponse.redirect(dest, { status: 302 })
+  const sp = new URLSearchParams(rewrite.search);
+  let u = `https://${after}`;
+  if (url.search) u += url.search; // append original query (starts with ?)
+  sp.set('u', u);
+  rewrite.search = `?${sp.toString()}`;
+
+  return NextResponse.rewrite(rewrite);
 }
