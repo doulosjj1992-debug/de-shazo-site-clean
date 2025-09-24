@@ -1,142 +1,220 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { setTimeout as delay } from 'timers/promises';
 
 const ROOT = process.cwd();
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const EXT_ROOT = path.join(PUBLIC_DIR, 'ext');
-const UA = 'Mozilla/5.0 (compatible; DeShazoMirror/1.0)';
+const UA = 'Mozilla/5.0 (compatible; DeShazoMirror/1.1)';
 
-function listHtml(dir) {
+function listFiles(dir, exts) {
   const out = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...listHtml(p));
-    else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) out.push(p);
+    if (entry.isDirectory()) out.push(...listFiles(p, exts));
+    else if (entry.isFile() && exts.some(e => entry.name.toLowerCase().endsWith(e))) out.push(p);
   }
   return out;
 }
 
-// Extract src + srcset URLs
-function extractUrls(html) {
-  const urls = new Set();
-  const srcRe = /\b(?:src|href)\s*=\s*(['"])(.*?)\1/gi;
-  const srcsetRe = /\bsrcset\s*=\s*(['"])(.*?)\1/gi;
+function uniq(arr) { return [...new Set(arr)]; }
 
-  let m;
-  while ((m = srcRe.exec(html))) {
-    urls.add(m[2]);
-  }
-  while ((m = srcsetRe.exec(html))) {
-    const parts = m[2].split(',');
-    for (const part of parts) {
-      const u = part.trim().split(/\s+/)[0];
-      if (u) urls.add(u);
-    }
-  }
-  return [...urls];
-}
+function normProto(u) { return u.startsWith('//') ? 'https:' + u : u; }
 
-function toAbsolute(u) {
-  // normalize protocol-relative
-  if (u.startsWith('//')) return 'https:' + u;
-  return u;
-}
+function isHttp(u) { return /^https?:\/\//i.test(u); }
+function isLocalExt(u) { return /^\/ext\/[^/]+\/.+/.test(u); }
 
-function isExternal(u) {
-  return /^https?:\/\//i.test(u);
-}
-
-function diskPathFor(u) {
+function diskPathForHttp(u) {
   const url = new URL(u);
-  // keep queryless path on disk; we’ll strip ?… for filename
-  const cleanPath = url.pathname.replace(/\/+/g, '/');
-  const local = path.join(EXT_ROOT, url.host, cleanPath);
-  return local;
+  return path.join(EXT_ROOT, url.host, url.pathname.replace(/\/+/g, '/'));
 }
 
-async function ensureFile(u, outPath) {
+function diskPathForLocalExt(u) {
+  // /ext/<host>/<path> -> <public>/ext/<host>/<path>
+  return path.join(PUBLIC_DIR, u.replace(/^\/+/, ''));
+}
+
+function httpFromLocalExt(u) {
+  // /ext/<host>/<path> -> https://<host>/<path>
+  const m = /^\/ext\/([^/]+)(\/.+)$/.exec(u);
+  if (!m) return null;
+  const host = m[1];
+  const p = m[2];
+  return `https://${host}${p}`;
+}
+
+async function ensureFileFromHttp(u, outPath) {
   if (fs.existsSync(outPath)) return 'exists';
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  const res = await fetch(u, { headers: { 'user-agent': UA, 'accept': '*/*', 'referer': 'https://deshazos-fresh-site.webflow.io/' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${u}`);
+  const res = await fetch(u, {
+    headers: {
+      'user-agent': UA,
+      'accept': '*/*',
+      'referer': 'https://deshazos-fresh-site.webflow.io/'
+    }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
   fs.writeFileSync(outPath, buf);
   return 'fetched';
 }
 
+function gatherUrlsFromHtml(html) {
+  const urls = [];
+
+  // src / href / content
+  const attrRe = /\b(?:src|href|content)\s*=\s*(['"])(.*?)\1/gi;
+  for (const m of html.matchAll(attrRe)) urls.push(m[2]);
+
+  // srcset (split by comma)
+  const srcsetRe = /\bsrcset\s*=\s*(['"])(.*?)\1/gi;
+  for (const m of html.matchAll(srcsetRe)) {
+    m[2].split(',').forEach(part => {
+      const u = part.trim().split(/\s+/)[0];
+      if (u) urls.push(u);
+    });
+  }
+
+  // video poster
+  const posterRe = /\bposter\s*=\s*(['"])(.*?)\1/gi;
+  for (const m of html.matchAll(posterRe)) urls.push(m[2]);
+
+  // inline style background-image/background with url(...)
+  const styleUrlRe = /style\s*=\s*(['"])(.*?)\1/gi;
+  for (const m of html.matchAll(styleUrlRe)) {
+    for (const n of m[2].matchAll(/url\((['"]?)([^)'"]+)\1\)/gi)) {
+      urls.push(n[2]);
+    }
+  }
+
+  return uniq(urls.map(normProto));
+}
+
+function gatherUrlsFromCss(css) {
+  const urls = [];
+  for (const m of css.matchAll(/url\((['"]?)([^)'"]+)\1\)/gi)) {
+    urls.push(normProto(m[2]));
+  }
+  return uniq(urls);
+}
+
 function rewriteHtml(html) {
-  // promote data-srcset/src and strip data: placeholders
+  // Promote Webflow lazy attrs
   html = html
     .replace(/\bdata-srcset=([\'"])(.*?)\1/gi, 'srcset=$1$2$1')
-    .replace(/\bsrc=([\'"])data:[^\1]*\1/gi, '') // remove tiny data placeholders
-    .replace(/\bdata-src=([\'"])(.*?)\1/gi, 'src=$1$2$1');
+    .replace(/\bdata-src=([\'"])(.*?)\1/gi, 'src=$1$2$1')
+    .replace(/\bsrc=(['"])data:[^'"]*\1/gi, '');
 
-  // normalize protocol-relative
-  html = html.replace(/\bsrc=(['"])\/\/([^'"]+)\1/gi, 'src="https://$2"');
+  // Normalize protocol-relative
+  html = html.replace(/\b(src|href|content|poster)=(['"])\/\/([^'"]+)\2/gi, '$1="https://$3"');
 
-  // add default sizes if srcset present w/o sizes
+  // Ensure sizes if srcset present and no sizes
   html = html.replace(/(<img\b((?:(?!>).)*?)srcset=(?:\"[^\"]+\"|'[^']+')(?![^>]*\bsizes=))/gi, '$1 sizes="100vw"');
 
-  // rewrite external URLs to /ext/<host>/<path> (drop queries)
-  html = html.replace(/\b(src|href|content)=(['"])(https?:\/\/[^'"]+)\2/gi, (_, attr, q, full) => {
+  // Rewrite external to /ext/…  (keep queries in HTML; file path on disk is queryless)
+  html = html.replace(/\b(src|href|content|poster)=(['"])(https?:\/\/[^'"]+)\2/gi, (_, attr, q, full) => {
     try {
       const u = new URL(full);
       return `${attr}=${q}/ext/${u.host}${u.pathname}${q}`;
     } catch { return `${attr}=${q}${full}${q}`; }
   });
 
+  // Inline style url(https://...) -> url(/ext/host/path)
+  html = html.replace(/url\((['"]?)(https?:\/\/[^)'"]+)\1\)/gi, (_, q, full) => {
+    const u = new URL(full);
+    return `url(/ext/${u.host}${u.pathname})`;
+  });
+
   return html;
 }
 
-async function main() {
-  const htmlFiles = listHtml(PUBLIC_DIR);
-  const allUrls = new Map(); // url -> outPath
+function rewriteCss(css) {
+  // url(https://host/path) -> url(/ext/host/path)
+  return css.replace(/url\((['"]?)(https?:\/\/[^)'"]+)\1\)/gi, (_, q, full) => {
+    const u = new URL(full);
+    return `url(/ext/${u.host}${u.pathname})`;
+  });
+}
 
-  // Collect URLs
-  for (const file of htmlFiles) {
-    const html = fs.readFileSync(file, 'utf8');
-    for (const raw of extractUrls(html)) {
-      const abs = toAbsolute(raw);
-      if (!isExternal(abs)) continue;
-      const outPath = diskPathFor(abs);
-      allUrls.set(abs, outPath);
+async function main() {
+  if (!fs.existsSync(PUBLIC_DIR)) {
+    console.error('No public/ directory found.');
+    process.exit(1);
+  }
+
+  const htmlFiles = listFiles(PUBLIC_DIR, ['.html']);
+  const cssFiles  = listFiles(PUBLIC_DIR, ['.css']);
+
+  // 1) Collect all URLs
+  const urls = new Set();
+
+  for (const f of htmlFiles) {
+    const html = fs.readFileSync(f, 'utf8');
+    gatherUrlsFromHtml(html).forEach(u => urls.add(u));
+  }
+  for (const f of cssFiles) {
+    const css = fs.readFileSync(f, 'utf8');
+    gatherUrlsFromCss(css).forEach(u => urls.add(u));
+  }
+
+  // 2) Decide what needs fetching
+  const fetchList = [];
+  for (const u0 of urls) {
+    // local /ext/<host>/<path> — ensure file exists; if not, fetch from https://host/path
+    if (isLocalExt(u0)) {
+      const out = diskPathForLocalExt(u0);
+      if (!fs.existsSync(out)) {
+        const http = httpFromLocalExt(u0);
+        if (http) fetchList.push([http, out]);
+      }
+      continue;
+    }
+    // external http(s)
+    if (isHttp(u0)) {
+      const out = diskPathForHttp(u0);
+      if (!fs.existsSync(out)) fetchList.push([u0, out]);
+      continue;
     }
   }
 
-  console.log(`Found ${allUrls.size} external asset URLs to check.`);
+  console.log(`Need to fetch ${fetchList.length} assets.`);
 
-  // Fetch with light concurrency
-  const queue = [...allUrls.entries()];
+  // 3) Fetch with small concurrency
+  let ok = 0, fail = 0, exist = 0;
+  const queue = [...fetchList];
   const CONC = 6;
-  let ok = 0, skip = 0, fail = 0;
 
-  async function worker(id) {
+  async function worker() {
     while (queue.length) {
-      const [u, outPath] = queue.shift();
+      const [u, out] = queue.shift();
       try {
-        const state = await ensureFile(u, outPath);
-        if (state === 'exists') skip++; else ok++;
+        const r = await ensureFileFromHttp(u, out);
+        if (r === 'exists') exist++; else ok++;
       } catch (e) {
         fail++;
-        console.error(`x ${u} -> ${outPath}\n  ${String(e)}`);
+        console.error(`x ${u} -> ${out}: ${String(e)}`);
       }
-      // be polite
       await delay(50);
     }
   }
-  await Promise.all(Array.from({ length: CONC }, (_, i) => worker(i)));
+  await Promise.all(Array.from({ length: CONC }, worker));
+  console.log(`Fetched: ${ok}, failed: ${fail}`);
 
-  console.log(`Fetched: ${ok}, existing: ${skip}, failed: ${fail}`);
-
-  // Rewrite HTML files to point to local /ext copies + normalize lazy attrs
-  for (const file of htmlFiles) {
-    const orig = fs.readFileSync(file, 'utf8');
-    const updated = rewriteHtml(orig);
-    if (updated !== orig) {
-      fs.writeFileSync(file, updated);
-      console.log('rewrote', path.relative(PUBLIC_DIR, file));
+  // 4) Rewrite HTML and CSS to /ext/ paths & fix lazy attrs
+  for (const f of htmlFiles) {
+    const orig = fs.readFileSync(f, 'utf8');
+    const upd = rewriteHtml(orig);
+    if (upd !== orig) {
+      fs.writeFileSync(f, upd);
+      console.log('rewrote HTML', path.relative(PUBLIC_DIR, f));
+    }
+  }
+  for (const f of cssFiles) {
+    const orig = fs.readFileSync(f, 'utf8');
+    const upd = rewriteCss(orig);
+    if (upd !== orig) {
+      fs.writeFileSync(f, upd);
+      console.log('rewrote CSS ', path.relative(PUBLIC_DIR, f));
     }
   }
 
