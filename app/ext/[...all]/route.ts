@@ -1,5 +1,3 @@
-import type { NextRequest } from 'next/server';
-
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
@@ -16,18 +14,15 @@ function forwardableHeaders(src: Headers) {
   return h;
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { all: string[] } }
-) {
-  const parts = params.all;
+export async function GET(req: Request, ctx: any) {
+  const parts: string[] | undefined = ctx?.params?.all;
   if (!parts || parts.length === 0) {
     return new Response('Missing host/path', { status: 400 });
   }
 
   const host = parts[0];
   const path = parts.slice(1).join('/');
-  const search = new URL(req.url).search; // keep query string
+  const search = new URL(req.url).search;
   const url = `https://${host}/${path}${search}`;
 
   try {
@@ -52,10 +47,7 @@ export async function GET(
   }
 }
 
-// Many CDNs send HEAD requests; mirror the GET logic for simplicity
-export async function HEAD(
-  req: NextRequest,
-  ctx: { params: { all: string[] } }
-) {
+// HEAD mirrors GET so CDNs/preloaders work
+export async function HEAD(req: Request, ctx: any) {
   return GET(req, ctx);
 }
