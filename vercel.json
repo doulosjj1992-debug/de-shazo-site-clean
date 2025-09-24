@@ -1,4 +1,8 @@
 {
   "trailingSlash": false,
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/ext/:host/:path*", "destination": "https://:host/:path*" },
+    { "source": "/ext/:host",        "destination": "https://:host" }
+  ]
 }
