@@ -13,3 +13,8 @@ node_modules
 .vercel/output
 .DS_Store
 node_modules/
+
+# build/type caches
+.next/
+tsconfig.tsbuildinfo
+.ts-trace.txt
