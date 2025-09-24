@@ -1,4 +1,8 @@
 export default function Home() {
-  if (typeof window !== "undefined") window.location.href = "/index.html";
-  return null;
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>It worked 🎉</h1>
+      <p>If you can read this, the app router is rendering correctly.</p>
+    </main>
+  );
 }
