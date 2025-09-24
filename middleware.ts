@@ -3,9 +3,12 @@ import { NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  // Serve the exported Webflow landing page at "/"
+
+  // Serve the exported Webflow homepage from /public/index.html
   if (pathname === '/') {
     return NextResponse.rewrite(new URL('/index.html', req.url));
   }
+
+  // Let everything else pass through (assets in /public work as-is)
   return NextResponse.next();
 }
